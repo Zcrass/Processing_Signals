@@ -40,7 +40,7 @@ if __name__ == '__main__':
         cols = list(dd.read_parquet(args.input).columns)
     else:
         #### load data with selected columns
-        cols = ["Time"] + var_cols
+        cols = ["Time"] + args.var_cols
     logger.info(f'Loading dataframe with {len(cols)} columns...')    
     
     ### define subranges according to batch size
