@@ -55,8 +55,9 @@ if __name__ == '__main__':
         name =  format(part_ind, '06d') + ".parquet"
         return name
     
-    ### run each batch    
-    for c, i in enumerate(range(0, num_sub_ranges)):
+    ### run each batch  
+    c = 0  
+    for i in range(0, num_sub_ranges):
         logger.info(f'Loading batch number: {c+1}')
         ### define subrange of columns
         sub_cols = ["Time"] + cols[sub_starts[i]:sub_ends[i]]
@@ -69,7 +70,8 @@ if __name__ == '__main__':
         mean_df = data.groupby(data["Time"]).mean().reset_index()
         ### compute results table for each column
         for j in sub_cols[1:]:
+            c += 1
             table = signal_df(mean_df, j)
-            logger.info(f'Saving signal {c+1}/{len(cols)}: {j}')
+            logger.info(f'Saving signal {c}/{len(cols)}: {j}')
             ### save parquet files
             table.to_parquet(path=args.out_path, partition_on=["Date", "Signal"], name_function=name_function)        
