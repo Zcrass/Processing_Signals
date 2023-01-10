@@ -30,17 +30,19 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
+    
+    
     ########################
     ### define date format
-    start_date = datetime.strptime(args.start_date, "%Y%m%d")
-    end_date = datetime.strptime(args.end_date, "%Y%m%d") 
+    start_date = datetime.strptime(args.start_date, '%Y%m%d')
+    end_date = datetime.strptime(args.end_date, '%Y%m%d') 
     ### Historico
-    if args.var_cols == "all":
+    if args.var_cols == 'all':
         ### load data with all columns
         cols = list(dd.read_parquet(args.input).columns)
     else:
         #### load data with selected columns
-        cols = ["Time"] + args.var_cols
+        cols = ['Time'] + args.var_cols
     logger.info(f'Loading dataframe with {len(cols)} columns...')    
     
     ### define subranges according to batch size
@@ -50,28 +52,27 @@ if __name__ == '__main__':
 
     ### defining naming function
     def name_function(part_ind):
-        Date = table["Date"][0]
-        name = Date + "_" + format(part_ind, '06d') + ".parquet"
-        name =  format(part_ind, '06d') + ".parquet"
-        return name
-    
-    ### run each batch  
+            return f'{day}_{str(part_ind).zfill(6)}.parquet'
+        
+    ### run each batch    
     c = 0  
-    for i in range(0, num_sub_ranges):
-        logger.info(f'Loading batch number: {c+1}')
+    for batch in (range(0, num_sub_ranges)):
+        logger.info(f'Loading batch number: {batch+1}')
         ### define subrange of columns
-        sub_cols = ["Time"] + cols[sub_starts[i]:sub_ends[i]]
+        sub_cols = ['Time'] + cols[sub_starts[batch]:sub_ends[batch]]
         ### read parquet per batch
         data = dd.read_parquet(args.input, columns=sub_cols)   
         ### filter by date and roun to seconds
-        data = data.loc[(data["Time"] >= start_date) & (data["Time"] < (end_date + timedelta(days=1)))]
-        data["Time"] = data["Time"].dt.floor("s")
+        data = data.loc[(data['Time'] >= start_date) & (data['Time'] < (end_date + timedelta(days=1)))]
+        data['Time'] = data['Time'].dt.floor('s')
         ### compute means
-        mean_df = data.groupby(data["Time"]).mean().reset_index()
+        data = data.groupby(data['Time']).mean().reset_index()
         ### compute results table for each column
-        for j in sub_cols[1:]:
+        for col in sub_cols[1:]:
             c += 1
-            table = signal_df(mean_df, j)
-            logger.info(f'Saving signal {c}/{len(cols)}: {j}')
-            ### save parquet files
-            table.to_parquet(path=args.out_path, partition_on=["Date", "Signal"], name_function=name_function)        
+            table = signal_df(data, col)
+            logger.info(f'Saving signal {c}/{len(cols)}: {col}')
+            ### save by date
+            for day in table.Date.unique():
+                ### save parquet files
+                table.loc[table.Date == day].to_parquet(path=args.out_path, partition_on=['Date', 'Signal'], name_function=name_function)        
