@@ -2,16 +2,17 @@
     "input": "DATA/",
     "start_date": "20221001",
     "var_cols": [
-        "hsa03_loopout_eslsfrcctrldevmaxrchd_C0187",
-        "hsa05_logicout_refsvoesls_C0203",
-        "hsa03_loopout_esrsfrcctrldevmaxrchd_C0188",
-        "hsa05_logicout_refsvoesrs_C0204",
-        "hsa03_loopout_dslsfrcctrldevmaxrchd_C0189",
-        "hsa05_logicout_refsvodsls_C0205",
-        "hsa03_loopout_dsrsfrcctrldevmaxrchd_C0190",
-        "hsa05_logicout_segvlvmode_C0202",
-        "hsa05_group_hsaactgaubs_C0195",
-        "hsa03_loopout_esmaxslantrchd_C0191"
+        "column_01",
+        "column_02",
+        "column_03",
+        "column_04",
+        "column_05",
+        "column_06",
+        "column_07",
+        "column_08",
+        "column_09",
+        "column_10",
+        "column_11"
         ],
     "batch_size": "3",
     "out_path": "Out_Data"

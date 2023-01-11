@@ -28,7 +28,6 @@ def signal_df(df, signal):
     Return:
     
     '''
-    # signal_df = df.groupby(df["Time"],)[signal].mean().reset_index()
     signal_df = df.dropna()
     signal_df["Date"] = df["Time"].dt.floor("d",).dt.strftime("%Y%m%d")
     signal_df["Signal"] = signal
@@ -44,7 +43,7 @@ def check_history(path):
         return False
 
 def process_signal(signal, start_date, path):
-    ### define subrange of columns
+    ### define columns
     sub_cols = ['Time', signal]
     ### read parquet
     data = dd.read_parquet(path, columns=sub_cols)   
@@ -54,8 +53,3 @@ def process_signal(signal, start_date, path):
     data = data.groupby(data['Time']).mean().reset_index()
     data = signal_df(data, signal)
     return data
-# def name_function(part_ind):
-#     Date = table["Date"].iat[0]
-#     name = Date + "_" + format(part_ind, '06d') + ".parquet"
-#     name =  format(part_ind, '06d') + ".parquet"
-#     return name
