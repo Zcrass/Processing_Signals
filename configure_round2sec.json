@@ -1,0 +1,14 @@
+{
+    "input": "DATA/",
+    "start_date": "20221001",
+    "var_cols": [
+        "hsa03_loopout_eslsfrcctrldevmaxrchd_C0187",
+        "hsa05_logicout_refsvoesls_C0203",
+        "hsa03_loopout_esrsfrcctrldevmaxrchd_C0188",
+        "hsa05_logicout_refsvoesrs_C0204",
+        "hsa03_loopout_dslsfrcctrldevmaxrchd_C0189",
+        "hsa05_logicout_refsvodsls_C0205"
+        ],
+    "batch_size": "3",
+    "out_path": "Out_Data"
+}
