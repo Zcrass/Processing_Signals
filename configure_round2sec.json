@@ -14,6 +14,5 @@
         "column_10",
         "column_11"
         ],
-    "batch_size": "3",
     "out_path": "Out_Data"
 }
