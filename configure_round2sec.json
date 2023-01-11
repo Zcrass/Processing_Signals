@@ -14,5 +14,7 @@
         "column_10",
         "column_11"
         ],
-    "out_path": "Out_Data"
+    "out_path": "Out_Data",
+    "max_attemps":5,
+    "sleep_time":10
 }

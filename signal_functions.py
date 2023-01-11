@@ -53,3 +53,4 @@ def process_signal(signal, start_date, path):
     data = data.groupby(data['Time']).mean().reset_index()
     data = signal_df(data, signal)
     return data
+
