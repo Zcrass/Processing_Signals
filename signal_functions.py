@@ -49,7 +49,7 @@ def process_signal(signal, start_date, path):
     ### read parquet
     data = dd.read_parquet(path, columns=sub_cols)   
     ### filter by date and round to seconds
-    data = data.loc[(data['Time'] > start_date)]
+    data = data.loc[(data['Time'] >= start_date)]
     data['Time'] = data['Time'].dt.floor('s')
     data = data.groupby(data['Time']).mean().reset_index()
     data = signal_df(data, signal)

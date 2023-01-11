@@ -7,7 +7,11 @@
         "hsa03_loopout_esrsfrcctrldevmaxrchd_C0188",
         "hsa05_logicout_refsvoesrs_C0204",
         "hsa03_loopout_dslsfrcctrldevmaxrchd_C0189",
-        "hsa05_logicout_refsvodsls_C0205"
+        "hsa05_logicout_refsvodsls_C0205",
+        "hsa03_loopout_dsrsfrcctrldevmaxrchd_C0190",
+        "hsa05_logicout_segvlvmode_C0202",
+        "hsa05_group_hsaactgaubs_C0195",
+        "hsa03_loopout_esmaxslantrchd_C0191"
         ],
     "batch_size": "3",
     "out_path": "Out_Data"
