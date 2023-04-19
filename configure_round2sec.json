@@ -2,19 +2,18 @@
     "input": "DATA/",
     "start_date": "20221001",
     "var_cols": [
-        "column_01",
-        "column_02",
-        "column_03",
-        "column_04",
-        "column_05",
-        "column_06",
-        "column_07",
-        "column_08",
-        "column_09",
-        "column_10",
-        "column_11"
+        "var_01",
+        "var_02",
+        "var_03",
+        "var_04",
+        "var_05",
+        "var_06",
+        "var_07",
+        "var_08",
+        "var_09",
+        "var_10"
         ],
-    "out_path": "Out_Data",
+    "out_path": "Out_Data/",
     "max_attemps":5,
     "sleep_time":10
 }

@@ -8,7 +8,7 @@ import logging as lg
 import sys
 import time
 
-from signal_functions import check_history, process_signal
+from signal_functions import functions as fun
 
 if __name__ == '__main__':
     ### define logger
@@ -33,8 +33,7 @@ if __name__ == '__main__':
     ### defining naming function
     def name_function(part_ind):
             return f'{day}_{str(part_ind).zfill(6)}.parquet'
-        
-    if check_history(args['out_path']):
+    if fun.check_history(args['out_path'], format='parquet'):
         ### running in historical mode
         logger.warning(f'NO historical data found!')
         logger.info(f'Running in historical mode...')
@@ -45,7 +44,7 @@ if __name__ == '__main__':
                     ### iterate through signals
                     start_date = datetime.strptime(str(args['start_date']), '%Y%m%d')
                     try:        
-                        data = process_signal(col, start_date, args['input'])
+                        data = fun.process_signal(col, start_date, args['input'])
                         logger.info(f'Saving signal: {col} starting from date {start_date}...')
                         ### save by date
                         for day in data.Date.unique():
@@ -84,7 +83,7 @@ if __name__ == '__main__':
             for attempt in range(max_attemps+1):
                 if attempt < max_attemps:
                     try:
-                        data = process_signal(col, start_date, args['input'])
+                        data = fun.process_signal(col, start_date, args['input'])
                         for day in data.Date.unique():
                             ### save parquet files
                             data.loc[data.Date == day].to_parquet(path=args['out_path'], partition_on=['Date', 'Signal'], name_function=name_function)        
