@@ -2,7 +2,7 @@
 
 A series of python programs that process data stored as parquet.
 
-## Gap detection
+## gaps.py
 This program reads a parquet database and identify gaps in a 'Time' column.
 
 The input is a parquet database in the format:
