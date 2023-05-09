@@ -1,0 +1,8 @@
+{
+    "input_data": "./DATA/",
+    "output_data": "./GAPS/",
+    "minimal_time_gap":"1 second",
+    "store_by": "day",
+    "start_date":"20000101",
+    "max_reads_attemps":5
+}
