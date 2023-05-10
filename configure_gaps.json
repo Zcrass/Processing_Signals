@@ -1,8 +1,0 @@
-{
-    "input": "./DATA/",
-    "out_path": "./gaps",
-    "time_gap":"1 second",
-    "store_by": "day",
-    "max_attemps":5,
-    "sleep_time":10
-}

@@ -1,8 +1,9 @@
 {
-    "input_data": "./DATA/",
+    "data_path": "./DATA/",
     "output_data": "./GAPS/",
-    "minimal_time_gap":"1 second",
-    "store_by": "day",
+    "minimal_time_gap":"0.5 second",
+    "split_data_stored_by": "day",
     "start_date":"20000101",
-    "max_reads_attemps":5
+    "max_reads_attemps":5,
+    "retry_sleep_time":10
 }
