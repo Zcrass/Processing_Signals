@@ -2,7 +2,7 @@
 
 A series of python programs that process data stored as parquet
 
-## gaps.py
+## gap_detector_app
 This program reads a parquet database with a 'Time' column and identify time gaps of a certain minimum length. The program reads the 'Time' column from the input database, identify gaps in the time sequence that are of a minimum defined length and save the data as a JSON table deposited in another path.
 
 The program automatically identify if data exist in the output path and identify the last date stored in it. Then start looking for data posterior to the last date identify in the historical data.
@@ -54,7 +54,7 @@ Cofiguration is done using a JSON file of format:
 }
 ```
 
-## round2sec.py
+## round2sec_app
 This function reduce the amount of data stored in  parquet database by grouping the values by second and computing the mean. The program reads the 'Time' column and the defined signal columns from the database, round the time and group the data by second computing the mean value for each second. Resulting data is stored in a parquet table into the ouput path spliting the files by date.
 
 The program automatically identify if data exist in the output path and identify the last date stored in it. Then start looking for data posterior to the last date identify in the historical data.
@@ -104,4 +104,12 @@ Cofiguration is done using a JSON file of format:
 ```
 
 ## Content
-
+This program includes the following files:
+- gap_detector_app/main.py: correspond to the gap_detector_app program. Requires an argument -i (input) which indicates the path to the json config file
+- gap_detector_app/utils.py: classes and functions used by the gap_detector_app.
+- round2sec_app/main.py: correspond to the round2sec program. Requires an argument -i (input) which indicates the path to the json config file
+- round2sec_app/utils.py: classes and functions used by the round2sec_app.
+- configure_gap_detector.json: configuration file for the gap_detector_app
+- configure_round2sec.json: configuration file for the round2sec_app
+- requeriments.txt: list of dependencies required
+- readme.md: this file
