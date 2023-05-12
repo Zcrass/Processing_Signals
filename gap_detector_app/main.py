@@ -11,11 +11,9 @@ from utils import Functions as fun
 def main():
     gaps = GapsData(**args)
     gaps.start_date = gaps.search_historical_data()
-    n_files = 0
     for entry in fun.scantree(gaps.data_path):
         if fun.check_starting_dates(entry, gaps.start_date):
             gaps.gaps_data = gaps.get_gap_data(entry)
-        n_files += 1
     ### filter gaps found
     gaps.gaps_data = gaps.gaps_data[gaps.gaps_data['gaps'] == True]
     ### check if gaps where found
@@ -23,7 +21,7 @@ def main():
         logger.info(f'Found {gaps.gaps_data.shape[0].compute()} gaps')
         gaps.save_data_by_date()
     else: 
-        logger.info(f'No gaps foudn in {n_files+1} files')
+        logger.info(f'No gaps foudn in files')
 
 if __name__ == '__main__':
     ### define logger

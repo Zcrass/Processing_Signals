@@ -1,20 +1,25 @@
 # Processing parquet data using Dask
 
-A series of python programs that process data stored as parquet.
+A series of python programs that process data stored as parquet
 
 ## gaps.py
-This program reads a parquet database and identify gaps in a 'Time' column.
+This program reads a parquet database with a 'Time' column and identify time gaps of a certain minimum length. The program reads the 'Time' column from the input database, identify gaps in the time sequence that are of a minimum defined length and save the data as a JSON table deposited in another path.
 
+The program automatically identify if data exist in the output path and identify the last date stored in it. Then start looking for data posterior to the last date identify in the historical data.
+
+### Input
 The input is a parquet database in the format:
+
 | Time                     | var1  | var2  | var3  | var4   |
 |--------------------------| ----- | ----- | ----- | ------ |
 | 2022-01-01 00:00:00.0000 |  9.5  |  7.7  |  8.2  |   7.7  |
 | 2022-01-01 00:00:00.1000 |  9.4  |  7.8  |  8.1  |   7.1  |
 | 2022-01-01 00:00:00.2000 |  9.3  |  7.7  |  8.1  |   7.8  |
 
+### Output
 The output is a JSON file in the format:
 
-```
+```json
 [
     {
         "file":"./DATA/date=20221001/file_01.parquet",
@@ -33,29 +38,37 @@ The output is a JSON file in the format:
     }
 ]
 ```
+
+### Configuration
 Cofiguration is done using a JSON file of format:
 
-```
+```json
 {
-    "input": "./DATA/",
-    "out_path": "./gaps",
-    "time_gap":"1 second",
-    "store_by": "day",
-    "max_attemps":5,
-    "sleep_time":10
+    "data_path": "./DATA/",
+    "output_data": "./GAPS/",
+    "minimal_time_gap":"0.5 second",
+    "split_data_stored_by": "day",
+    "start_date":"20000101",
+    "max_reads_attemps":5,
+    "retry_sleep_time":10
 }
 ```
 
 ## round2sec.py
-Their function is to reduce the amount of data grouping the values by second and computing the mean.
+This function reduce the amount of data stored in  parquet database by grouping the values by second and computing the mean. The program reads the 'Time' column and the defined signal columns from the database, round the time and group the data by second computing the mean value for each second. Resulting data is stored in a parquet table into the ouput path spliting the files by date.
 
+The program automatically identify if data exist in the output path and identify the last date stored in it. Then start looking for data posterior to the last date identify in the historical data.
+
+### Input
 This program take as input a series of variable names and parquet database in the format:
+
 | Time                     | var1  | var2  | var3  | var4   |
 |--------------------------| ----- | ----- | ----- | ------ |
 | 2022-01-01 00:00:00.0000 |  9.5  |  7.7  |  8.2  |   7.7  |
 | 2022-01-01 00:00:00.1000 |  9.4  |  7.8  |  8.1  |   7.1  |
 | 2022-01-01 00:00:00.2000 |  9.3  |  7.7  |  8.1  |   7.8  |
 
+### Output
 The output is a parquet database in the format:
 
 | Time                | Value  | Date     | variable  |
@@ -67,27 +80,28 @@ The output is a parquet database in the format:
 | 2022-01-01 00:00:02 | 8.1    | 20220101 |  var3     |
 | 2022-01-01 00:00:03 | 8.2    | 20220101 |  var3     |
 
-
+## Configuration
 Cofiguration is done using a JSON file of format:
-```
+```json
 {
-    "input": "DATA/",
-    "start_date": "20221001",
-    "var_cols": [
-        "var_01",
-        "var_02",
-        "var_03",
-        "var_04",
-        "var_05",
-        "var_06",
-        "var_07",
-        "var_08",
-        "var_09",
-        "var_10"
-        ],
-    "out_path": "Out_Data/",
-    "max_attemps":5,
-    "sleep_time":10
+    "input_data_path": "DATA/",
+    "start_reading_date": "20221001",
+    "time_column":"Time",
+    "signals_to_include": ["var0",
+                        "var1", 
+                        "var2", 
+                        "var3", 
+                        "var4", 
+                        "var5", 
+                        "var6", 
+                        "var7", 
+                        "var8", 
+                        "var9"],
+    "output_data_path": "Out_Data/",
+    "max_reads_attemps":5,
+    "retry_sleep_time":10
 }
 ```
+
+## Content
 
