@@ -70,7 +70,7 @@ class SignalData():
                     logger.info(f'retry in {self.retry_sleep_time}')
                     time.sleep(self.retry_sleep_time)
                 else:
-                    logger.error(f'Cannot read signal {self.signal_name} from path {self.input_data_path}')
+                    logger.error(f'Cannot read signal {self.signal_name} from path {self.input_data_path}, skiping')
                 
     def signal_table_formater(self):
         ''' 
@@ -107,7 +107,7 @@ class SignalData():
                     logger.info(f'retry in {self.retry_sleep_time}')
                     time.sleep(self.retry_sleep_time)
                 else:
-                    logger.error(f'Cannot write signal {self.signal_name} into path {self.output_data_path} skiping')
+                    logger.error(f'Cannot write signal {self.signal_name} into path {self.output_data_path}, skiping')
 
 
 

@@ -16,7 +16,7 @@ class GapsData:
     
     def search_historical_data(self):
         '''
-        
+        Check if historical data exist and define the staring date
         '''
         logger.info('Looking for historical data...')
         try:
@@ -36,22 +36,25 @@ class GapsData:
             return start_date
         
     def get_gap_data(self, entry):
+        '''
+        Read parquet file and identify gaps
+        '''
         logger.info(f'Searching for gaps in file: {entry.path}')
-        for attempt in range(self.max_reads_attemps+1):
-            if attempt < self.max_reads_attemps:        
-                try:
-                    data = dd.concat([self.gaps_data,
-                                      Functions.read_gaps_from_file(entry.path,
-                                                                    self.minimal_time_gap)]).drop_duplicates().reset_index(drop=True)
-                    return data
-                except:
-                    logger.warning(f'Cannot read file: {entry.path}')
-                    if attempt < self.max_reads_attemps:
-                        logger.info(f'retry in {self.retry_sleep_time}')
-                        time.sleep(self.retry_sleep_time)
-
-            else:
-                logger.error(f'cannot read file {entry.path}')
+        attempt = 0 
+        while attempt < self.max_reads_attemps:
+            attempt += 1
+            try:
+                data = dd.concat([self.gaps_data,
+                                  Functions.read_gaps_from_file(entry.path,
+                                                                self.minimal_time_gap)]).drop_duplicates().reset_index(drop=True)
+                return data
+            except:
+                logger.warning(f'Cannot read file: {entry.path}')
+                if attempt < self.max_reads_attemps:
+                    logger.info(f'retry in {self.retry_sleep_time}')
+                    time.sleep(self.retry_sleep_time)
+                else:
+                    logger.error(f'Cannot read file from {self.entry.path}, skiping')
         
     def save_data_by_date(self):
         ### reducing data and spliting by date
@@ -72,41 +75,36 @@ class GapsData:
             json_out['end_gap'] = json_out['end_gap'].astype(str)
             self.save_json(json_out, t)
 
-
-
-                
-
     def save_json(self, json_out, t):
         def name_function(p_index):
             filename = (f'{t.strftime("%Y%m%d")}_{t.strftime("%H%M%S")}.json') 
             # filename = (f'{t.strftime("%Y%m%d")}_{p_index}.json')
             return filename
-        logger.info(f'Writing gaps data into file: {self.output_data}/date={t.strftime("%Y%m%d")}/{name_function(0)}')
-        for attempt in range(self.max_reads_attemps+1):
-            if attempt < self.max_reads_attemps:        
-                try:
-                    ### DOES NOT WORK! using dask
-                    # dd.to_json(json_out, url_path=f'{args["out_path"]}/date={t.strftime("%Y%m%d")}/',
-                    #            name_function=name_function , orient='records') 
-                    ### IT WORKS! using pandas and creating folders separatedly
-
-                    json_out = json_out.compute()
-                    outdir = f'{self.output_data}/date={t.strftime("%Y%m%d")}/'
-                    if not os.path.exists(outdir):
-                        logger.info(f'Creating new folder {outdir}')
-                        os.makedirs(outdir)
-                    json_out.to_json(path_or_buf=f'{self.output_data}/date={t.strftime("%Y%m%d")}/{name_function(0)}',
-                                        orient='records', indent=4)
-                    logger.info(f'Gaps data saved into file: {self.output_data}/date={t.strftime("%Y%m%d")}/{name_function(0)}')
-                except:
-                    logger.warning(f'Cannot write file: ')
-                    if attempt < self.max_reads_attemps:
-                        logger.info(f'retry in {self.retry_sleep_time}')
-                        time.sleep(self.retry_sleep_time)
-                else:
-                    break
-            else: 
-                logger.error(f'cannot write file')
+        outdir = f'{self.output_data}/date={t.strftime("%Y%m%d")}'
+        logger.info(f'Writing gaps data into file: {outdir}/{name_function(0)}')
+        attempt = 0
+        while attempt < self.max_reads_attemps:
+            try:
+                ### DOES NOT WORK! using dask
+                # dd.to_json(json_out, url_path=f'{args["out_path"]}/date={t.strftime("%Y%m%d")}/',
+                #            name_function=name_function , orient='records') 
+               
+                ### IT WORKS! using pandas and creating folders separatedly
+                json_out = json_out.compute()
+                if not os.path.exists(outdir):
+                    logger.info(f'Creating new folder {outdir}')
+                    os.makedirs(outdir)
+                json_out.to_json(path_or_buf=f'{outdir}/{name_function(0)}',
+                                    orient='records', indent=4)
+                logger.info(f'Gaps data saved into file: {outdir}/{name_function(0)}')
+                break
+            except:
+                logger.warning(f'Cannot write file: ')
+                if attempt < self.max_reads_attemps:
+                    logger.info(f'retry in {self.retry_sleep_time}')
+                    time.sleep(self.retry_sleep_time)
+                else: 
+                    logger.error(f'Cannot write file {outdir}/{name_function(0)}, skiping')
 
                
 class Functions:
@@ -150,51 +148,4 @@ class Functions:
         df['init_gap'] = df['Time'].shift(1).mask(df['gaps'] != True)
         df['file'] = path
         return(df)
-
-
-    def check_history(path):
-        '''
-        
-        '''
-        try:
-            dd.read_parquet(path)
-        except:
-            return True
-        else:
-            return False
-                    
-    def process_signal(signal, start_date, path):
-        '''
-        
-        '''
-        ### define columns
-        sub_cols = ['Time', signal]
-        ### read parquet
-        data = dd.read_parquet(path, columns=sub_cols)   
-        ### filter by date and round to seconds
-        data = data.loc[(data['Time'] >= start_date)]
-        data['Time'] = data['Time'].dt.floor('s')
-        data = data.groupby(data['Time']).mean().reset_index()
-        data = aditional_functions.signal_df(data, signal)
-        return data
-
-
-
-
-
-class aditional_functions:     
-    def signal_df(df, signal):
-        ''' 
-        Function to convert df format to output table format 
-        
-        Args:
-        
-        Return:
-        
-        '''
-        signal_df = df.dropna()
-        signal_df["Date"] = df["Time"].dt.floor("d",).dt.strftime("%Y%m%d")
-        signal_df["Signal"] = signal
-        names = ["Time", "Value", "Date", "Signal"]
-        return signal_df.rename(columns=dict(zip(signal_df.columns, names)))
 
