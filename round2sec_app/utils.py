@@ -1,88 +1,113 @@
+import logging as lg
 from dask import dataframe as dd
-import pandas as pd
-from os import scandir
+import time
 
-class functions:
-    def check_history(path):
+
+logger = lg.getLogger(__name__)
+class ProcessingSignals():
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+    def search_historical_data_parquet(self):
         '''
-        
+        Check if historical data exist and define the staring date
         '''
+        logger.info('Looking for historical data...')
         try:
-            dd.read_parquet(path)
+            dd.read_parquet(self.output_data_path)
         except:
-            return True
+            logger.warning(f'NO historical data found!')
+            start_date = self.start_reading_date
+            logger.info(f'Running in historical mode starting from date: {start_date}...')
+            return start_date
         else:
-            return False
-                    
-    def process_signal(signal, start_date, path):
-        '''
+            logger.info(f'Historical data found!')
+            start_date = dd.read_parquet(self.output_data_path)
+            start_date = start_date.sort_values(by='Time')
+            start_date = start_date['Time'].tail(n=1).values[0]
+            logger.info(f'Running in append mode...')
+            logger.info(f'Adding data created after {start_date}...')
+            return start_date
         
+    def process_signal(self, signal_name):
         '''
-        ### define columns
-        sub_cols = ['Time', signal]
-        ### read parquet
-        data = dd.read_parquet(path, columns=sub_cols)   
-        ### filter by date and round to seconds
-        data = data.loc[(data['Time'] >= start_date)]
-        data['Time'] = data['Time'].dt.floor('s')
-        data = data.groupby(data['Time']).mean().reset_index()
-        data = aditional_functions.signal_df(data, signal)
-        return data
-
-    def scantree(path):
-        ''''
-        Recursively yield DirEntry objects for given directory.
-        Taken from: https://stackoverflow.com/a/33135143        
+        Read, transform and save data for individual signal
         '''
-        for entry in scandir(path):
-            if entry.is_dir(follow_symlinks=False):
-                yield from functions.scantree(entry.path)  
-            else:
-                yield entry
-
-    def read_gaps_from_file(path, time_gap):
+        logger.info(f'Processing signal: {signal_name}...')
+        signal_data = SignalData(signal_name, **self.__dict__)
+        ### read data from signal
+        signal_data.input_data = signal_data.read_parquet_signal()
+        ### transform signal data
+        signal_data.output_data = signal_data.signal_table_formater()
+        ### save signal data
+        signal_data.write_parquet_table()
+        logger.info(f'Signal: {signal_name} processed succesfully!')
+        
+class SignalData():
+    def __init__(self, signal_name, **kwargs):
+        self.__dict__ = kwargs
+        self.signal_name = signal_name
+        self.columns = ['Time', self.signal_name]
+ 
+    def read_parquet_signal(self):
         '''
-            identify time gaps in  parquet file
-            
-            Args: 
-                path: path to parquet file
-            
-            Return:
-                A dask data frame with three columns: [file, Time, gaps]
+        Read signal data from parquet file
         '''
-        df = dd.DataFrame.from_dict({'file': [], 'Time': [], 'gaps':[], 'init_gap':[], 'end_gap':[]}, npartitions=1)
-        df['Time'] = dd.read_parquet(path, columns='Time').dt.floor('s').unique()
-        df = df.sort_values(by="Time")
-        df['gaps'] = df['Time'].diff() > pd.to_timedelta(time_gap)
-        df['gaps'] = df['gaps'].astype(dtype='object')
-        df['end_gap'] = df['Time'].mask(df['gaps'] != True)
-        df['init_gap'] = df['Time'].shift(1).mask(df['gaps'] != True)
-        df['file'] = path
-        return(df)
-
-    def check_dates(path, start_date):
-        if start_date != None:
-            data = dd.read_parquet(path, columns='Time')
-            data = data.mask(data < start_date).dropna()
-            if data.shape[0].compute() > 0:
-                return True
-            else:
-                return False
-        else:
-            return True
-class aditional_functions:     
-    def signal_df(df, signal):
+        logger.info(f'reading signal {self.signal_name} from path {self.input_data_path}')
+        attempt = 0
+        while attempt < self.max_reads_attemps:
+            attempt += 1
+            try:  
+                data = dd.read_parquet(self.input_data_path, columns=self.columns)
+                ### filter by date and round to seconds
+                data = data.loc[(data['Time'] >= self.start_reading_date)]
+                data['Time'] = data['Time'].dt.floor('s')
+                data = data.groupby(data['Time']).mean().reset_index()
+                return data
+            except:
+                logger.warning(f'Cannot read file: {self.input_data_path}')
+                if attempt < self.max_reads_attemps:
+                    logger.info(f'retry in {self.retry_sleep_time}')
+                    time.sleep(self.retry_sleep_time)
+                else:
+                    logger.error(f'Cannot read signal {self.signal_name} from path {self.input_data_path}')
+                
+    def signal_table_formater(self):
         ''' 
         Function to convert df format to output table format 
-        
-        Args:
-        
-        Return:
-        
         '''
-        signal_df = df.dropna()
-        signal_df["Date"] = df["Time"].dt.floor("d",).dt.strftime("%Y%m%d")
-        signal_df["Signal"] = signal
+        output_data = self.input_data.dropna()
+        output_data["Date"] = self.input_data["Time"].dt.floor("d",).dt.strftime("%Y%m%d")
+        output_data["Signal"] = self.signal_name
         names = ["Time", "Value", "Date", "Signal"]
-        return signal_df.rename(columns=dict(zip(signal_df.columns, names)))
+        return output_data.rename(columns=dict(zip(output_data.columns, names)))
+    
+    def write_parquet_table(self):
+        '''
+        Saves parquet data into ouput path
+        '''
+        def name_function(part_ind):
+            return f'{day}_{str(part_ind).zfill(6)}.parquet'
+        
+        logger.info(f'Saving signal: {self.signal_name} starting from date {self.start_reading_date}...')
+        attempt = 0
+        while attempt < self.max_reads_attemps:
+            attempt += 1
+            try:
+                ### save by date
+                for day in self.output_data.Date.unique():
+                    ### save parquet files
+                    self.output_data.loc[self.output_data.Date == day].to_parquet(path=self.output_data_path,
+                                                                                partition_on=['Date', 'Signal'], 
+                                                                                name_function=name_function)
+                break  
+            except:
+                logger.warning(f'Cannot write file into: {self.output_data_path}')
+                if attempt < self.max_reads_attemps:
+                    logger.info(f'retry in {self.retry_sleep_time}')
+                    time.sleep(self.retry_sleep_time)
+                else:
+                    logger.error(f'Cannot write signal {self.signal_name} into path {self.output_data_path} skiping')
+
+
 

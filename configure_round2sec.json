@@ -1,19 +1,18 @@
 {
-    "input": "DATA/",
-    "start_date": "20221001",
-    "var_cols": [
-        "var_01",
-        "var_02",
-        "var_03",
-        "var_04",
-        "var_05",
-        "var_06",
-        "var_07",
-        "var_08",
-        "var_09",
-        "var_10"
-        ],
-    "out_path": "Out_Data/",
-    "max_attemps":5,
-    "sleep_time":10
+    "input_data_path": "DATA/",
+    "start_reading_date": "20221001",
+    "time_column":"Time",
+    "signals_to_include": ["var0",
+                        "var1", 
+                        "var2", 
+                        "var3", 
+                        "var4", 
+                        "var5", 
+                        "var6", 
+                        "var7", 
+                        "var8", 
+                        "var9"],
+    "output_data_path": "Out_Data/",
+    "max_reads_attemps":5,
+    "retry_sleep_time":10
 }

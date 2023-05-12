@@ -39,4 +39,3 @@ if __name__ == '__main__':
     args = json.load(open(parser.parse_args().input))
 
     main()
-    ########################
